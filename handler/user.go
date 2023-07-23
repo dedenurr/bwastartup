@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"bwastartup/auth"
 	"bwastartup/helper"
 	"bwastartup/user"
 	"fmt"
@@ -11,24 +12,23 @@ import (
 
 type userHandler struct {
 	userService user.Service
+	authService auth.Service
 }
 
-func NewUserHandler(userService user.Service) *userHandler {
-	return &userHandler{userService}
+func NewUserHandler(userService user.Service, authService auth.Service) *userHandler {
+	return &userHandler{userService, authService}
 }
 
 func (h *userHandler) RegisterUser(c *gin.Context)  {
 	// tangkap input dari user
 	// map input dari user ke struct RegisterInput
 	// struct di atas kita pasing sebagai parameter service
-
 	var input user.RegisterUserinput
 	err := c.ShouldBindJSON(&input)
 	if err != nil {
 		
 		errors := helper.FormatValidationError(err)
 		errorMessage := gin.H{"errors": errors}
-
 
 		response := helper.APIResponse("Registered Account Failed", http.StatusUnprocessableEntity,"error",errorMessage)
 		c.JSON(http.StatusUnprocessableEntity, response)
@@ -42,7 +42,14 @@ func (h *userHandler) RegisterUser(c *gin.Context)  {
 		return
 	}
 
-	formatter := user.FormatUser(newUser,"tokentokentokrn")
+	token, err := h.authService.GenerateToken(newUser.ID)
+	if err != nil {
+		response := helper.APIResponse("Registered Account Failed", http.StatusBadRequest,"error",nil)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	formatter := user.FormatUser(newUser, token)
 
 	response := helper.APIResponse("Account has been registered", http.StatusOK,"success",formatter)
 
@@ -72,7 +79,15 @@ func (h *userHandler)  Login(c *gin.Context){
 		return
 	}
 
-	formatter := user.FormatUser(loggedinUser,"tokentokentokrn")
+	token, err := h.authService.GenerateToken(loggedinUser.ID)
+	if err != nil {
+		errorMessage := gin.H{"errors": err.Error()}
+		response := helper.APIResponse("Login Failed", http.StatusBadRequest,"error",errorMessage)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	formatter := user.FormatUser(loggedinUser,token)
 
 	response := helper.APIResponse("Succesfuly Loggedin", http.StatusOK,"success",formatter)
 
