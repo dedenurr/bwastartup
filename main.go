@@ -3,6 +3,7 @@ package main
 import (
 	"bwastartup/auth"
 	"bwastartup/handler"
+	"bwastartup/middleware"
 	"bwastartup/user"
 	"log"
 
@@ -23,9 +24,7 @@ func main() {
 	userService := user.NewService(userRepository)
 	authService := auth.NewService()
 
-
 	userHandler := handler.NewUserHandler(userService, authService)
-
 
 	router := gin.Default()
 
@@ -33,9 +32,16 @@ func main() {
 	api.POST("/users", userHandler.RegisterUser)
 	api.POST("/sessions", userHandler.Login)
 	api.POST("/email_checkers", userHandler.CheckEmailAvailability)
-	api.POST("/avatars", userHandler.UploadAvatar)
+	api.POST("/avatars", middleware.AuthMiddleware(authService, userService), userHandler.UploadAvatar)
 	router.Run()
-	
-
 } 
 
+
+/* 
+1. ambil nilai header authorization: bearer tokentokentoken
+2. dari header authorization, kita ambil nilai tokennya saja
+3. kita validasi token
+4. ambil user_id
+5. ambil user daru db berdasarkan user_id lewat service
+6. set context isinya user
+*/
