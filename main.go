@@ -25,10 +25,9 @@ func main() {
 	userRepository := user.NewRepository(db)
 	campaignRepository := campaign.NewRepository(db)
 
-	// campaigns, _:= campaignRepository.FindAll()
-	campaigns, _:= campaignRepository.FindByUserId(1)
+	// campaigns, _ := campaignRepository.FindAll()
+	campaigns, _ := campaignRepository.FindByUserId(1)
 
-	fmt.Println("debug")
 	fmt.Println("debug")
 	fmt.Println("debug")
 	fmt.Println("debug")
@@ -54,10 +53,9 @@ func main() {
 	api.POST("/email_checkers", userHandler.CheckEmailAvailability)
 	api.POST("/avatars", middleware.AuthMiddleware(authService, userService), userHandler.UploadAvatar)
 	router.Run()
-} 
+}
 
-
-/* 
+/*
 1. ambil nilai header authorization: bearer tokentokentoken
 2. dari header authorization, kita ambil nilai tokennya saja
 3. kita validasi token
