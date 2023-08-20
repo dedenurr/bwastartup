@@ -6,7 +6,6 @@ import (
 	"bwastartup/handler"
 	"bwastartup/middleware"
 	"bwastartup/user"
-	"fmt"
 	"log"
 
 	"github.com/gin-gonic/gin"
@@ -29,8 +28,7 @@ func main() {
 	userService := user.NewService(userRepository)
 	authService := auth.NewService()
 
-	campaigns, _ := campaignService.FindCampaigns(2)
-	fmt.Println(len(campaigns))
+	campaignHandler := handler.NewCampaignHandler(campaignService)
 
 	userHandler := handler.NewUserHandler(userService, authService)
 
@@ -41,6 +39,8 @@ func main() {
 	api.POST("/sessions", userHandler.Login)
 	api.POST("/email_checkers", userHandler.CheckEmailAvailability)
 	api.POST("/avatars", middleware.AuthMiddleware(authService, userService), userHandler.UploadAvatar)
+	api.GET("/campaigns", campaignHandler.GetCampaigns)
+
 	router.Run()
 }
 
